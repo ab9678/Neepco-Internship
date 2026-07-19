@@ -80,3 +80,109 @@ export const requestRegistrationOTP = async (req, res) => {
         });
     }
 };
+
+
+export const verifyRegistrationOTP = async (req, res) => {
+    try {
+        const { employeeId, companyEmail, otp, password } = req.body;
+
+        // Check required fields
+        if ((!employeeId && !companyEmail) || !otp || !password) {
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Employee ID or Company Email, OTP and Password are required.",
+            });
+        }
+
+        // Find employee
+        const employee = await Employee.findOne({
+            $or: [
+                employeeId ? { employeeId } : null,
+                companyEmail ? { companyEmail } : null,
+            ].filter(Boolean),
+        });
+
+        if (!employee) {
+            return res.status(404).json({
+                success: false,
+                message: "Employee not found.",
+            });
+        }
+
+        // Already registered?
+        if (employee.isRegistered) {
+            return res.status(400).json({
+                success: false,
+                message: "Employee is already registered.",
+            });
+        }
+
+        // Find latest OTP
+        const otpRecord = await OTP.findOne({
+            employee: employee._id,
+            purpose: "registration",
+            isUsed: false,
+        }).sort({ createdAt: -1 });
+
+        if (!otpRecord) {
+            return res.status(404).json({
+                success: false,
+                message: "OTP not found.",
+            });
+        }
+
+        // Check expiry
+        if (otpRecord.expiresAt < new Date()) {
+            return res.status(400).json({
+                success: false,
+                message: "OTP has expired.",
+            });
+        }
+
+        // Compare OTP
+        if (otpRecord.otp !== otp) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid OTP.",
+            });
+        }
+
+        // Hash password
+        const hashedPassword = await bcrypt.hash(password, 12);
+
+        // Create user
+        await User.create({
+            employee: employee._id,
+            password: hashedPassword,
+        });
+
+        // Update employee
+        employee.isRegistered = true;
+        await employee.save();
+
+        // Mark OTP used
+        otpRecord.isUsed = true;
+        await otpRecord.save();
+
+        return res.status(201).json({
+            success: true,
+            message: "Registration completed successfully.",
+        });
+
+    } catch (error) {
+        console.error(error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error.",
+        });
+    }
+};
+
+
+
+
+
+
+
