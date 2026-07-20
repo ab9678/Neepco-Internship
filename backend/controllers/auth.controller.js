@@ -367,6 +367,13 @@ export const verifyLoginOTP = async (req, res) => {
     }
 };
 
+export const getCurrentUser = async (req, res) => {
 
+    return res.status(200).json({
+        success: true,
+        user: req.user
+    });
+
+};
 
 
