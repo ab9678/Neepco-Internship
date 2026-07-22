@@ -1,29 +1,6 @@
-import { useEffect, useState } from "react";
 import PostCard from "./PostCard";
-import { getAllPosts } from "../../services/post.service";
 
-const FeedList = () => {
-    const [posts, setPosts] = useState([]);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        fetchPosts();
-    }, []);
-
-    const fetchPosts = async () => {
-        try {
-            const data = await getAllPosts();
-
-            if (data.success) {
-                setPosts(data.posts);
-            }
-        } catch (error) {
-            console.error("Failed to fetch posts:", error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
+const FeedList = ({ posts, loading }) => {
     if (loading) {
         return (
             <p className="text-center text-gray-500">

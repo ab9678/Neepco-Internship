@@ -1,6 +1,15 @@
 import api from "./api";
 
-export const getAllPosts = async () => {
-    const response = await api.get("/posts");
-    return response.data;
+const postService = {
+    getAllPosts: () => api.get("/posts"),
+
+    createPost: (data) => api.post("/posts", data),
+
+    updatePost: (id, data) => api.put(`/posts/${id}`, data),
+
+    deletePost: (id) => api.delete(`/posts/${id}`),
+
+    toggleLike: (id) => api.patch(`/posts/${id}/like`),
 };
+
+export default postService;
