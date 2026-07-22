@@ -5,7 +5,7 @@ import LoginOTP from "./pages/auth/LoginOTP";
 import Register from "./pages/auth/Register";
 import RegisterOTP from "./pages/auth/RegisterOTP";
 
-import Dashboard from "./pages/Dashboard";
+import FeedPage from "./pages/feed/FeedPage";
 
 import ProtectedRoute from "./routes/ProtectedRoute";
 
@@ -26,7 +26,7 @@ function App() {
                 path="/dashboard"
                 element={
                     <ProtectedRoute>
-                        <Dashboard />
+                        <FeedPage />
                     </ProtectedRoute>
                 }
             />
