@@ -4,11 +4,10 @@ export const createPost = async (req, res) => {
     try {
         const { content } = req.body;
 
-        // Validation
         if (!content || !content.trim()) {
             return res.status(400).json({
                 success: false,
-                message: "Post content is required."
+                message: "Post content is required.",
             });
         }
 
@@ -22,56 +21,66 @@ export const createPost = async (req, res) => {
             message: "Post created successfully.",
             post,
         });
-
     } catch (error) {
         console.error("Create Post Error:", error);
 
         return res.status(500).json({
             success: false,
-            message: "Internal Server Error."
+            message: "Internal Server Error.",
         });
     }
 };
 
 export const getAllPosts = async (req, res) => {
     try {
-
         const posts = await Post.find()
             .populate({
                 path: "author",
                 populate: {
                     path: "employee",
-                    select: "firstName lastName employeeId department designation profilePicture"
-                }
+                    select: "firstName lastName fullName employeeId department designation profilePicture",
+                },
             })
             .sort({ createdAt: -1 });
 
-        return res.status(200).json({
-            success: true,
-            count: posts.length,
-            posts,
+        const postsWithLikeStatus = posts.map((post) => {
+            const postObj = post.toObject();
+
+            postObj.isLiked = post.likes.some(
+                (like) => like.toString() === req.user._id.toString()
+            );
+
+            // ✅ New
+            postObj.likesCount = post.likes.length;
+            postObj.commentsCount = post.comments.length;
+
+            return postObj;
         });
 
+        return res.status(200).json({
+            success: true,
+            count: postsWithLikeStatus.length,
+            posts: postsWithLikeStatus,
+        });
     } catch (error) {
         console.error("Get Posts Error:", error);
 
         return res.status(500).json({
             success: false,
-            message: "Internal Server Error."
+            message: "Internal Server Error.",
         });
     }
 };
 
 export const updatePost = async (req, res) => {
     try {
-
         const { id } = req.params;
         const { content } = req.body;
 
         if (!content || !content.trim()) {
             return res.status(400).json({
                 success: false,
-                message: "Post content is required."
+                message: "Post content is required.",
             });
         }
 
@@ -80,15 +89,14 @@ export const updatePost = async (req, res) => {
         if (!post) {
             return res.status(404).json({
                 success: false,
-                message: "Post not found."
+                message: "Post not found.",
             });
         }
 
-        // Owner check
         if (post.author.toString() !== req.user._id.toString()) {
             return res.status(403).json({
                 success: false,
-                message: "You can only edit your own posts."
+                message: "You can only edit your own posts.",
             });
         }
 
@@ -97,25 +105,40 @@ export const updatePost = async (req, res) => {
 
         await post.save();
 
+        const updatedPost = await Post.findById(post._id).populate({
+            path: "author",
+            populate: {
+                path: "employee",
+                select: "firstName lastName fullName employeeId department designation profilePicture",
+            },
+        });
+
+        const updatedPostObj = updatedPost.toObject();
+
+        updatedPostObj.isLiked = updatedPost.likes.some(
+            (like) => like.toString() === req.user._id.toString()
+        );
+
+        updatedPostObj.likesCount = updatedPost.likes.length;
+        updatedPostObj.commentsCount = updatedPost.comments.length;
+
         return res.status(200).json({
             success: true,
             message: "Post updated successfully.",
-            post
+            post: updatedPostObj,
         });
-
     } catch (error) {
         console.error("Update Post Error:", error);
 
         return res.status(500).json({
             success: false,
-            message: "Internal Server Error."
+            message: "Internal Server Error.",
         });
     }
 };
 
 export const deletePost = async (req, res) => {
     try {
-
         const { id } = req.params;
 
         const post = await Post.findById(id);
@@ -123,18 +146,17 @@ export const deletePost = async (req, res) => {
         if (!post) {
             return res.status(404).json({
                 success: false,
-                message: "Post not found."
+                message: "Post not found.",
             });
         }
 
-        // Owner or Admin can delete
         if (
             post.author.toString() !== req.user._id.toString() &&
             req.user.role !== "admin"
         ) {
             return res.status(403).json({
                 success: false,
-                message: "You are not authorized to delete this post."
+                message: "You are not authorized to delete this post.",
             });
         }
 
@@ -142,22 +164,20 @@ export const deletePost = async (req, res) => {
 
         return res.status(200).json({
             success: true,
-            message: "Post deleted successfully."
+            message: "Post deleted successfully.",
         });
-
     } catch (error) {
         console.error("Delete Post Error:", error);
 
         return res.status(500).json({
             success: false,
-            message: "Internal Server Error."
+            message: "Internal Server Error.",
         });
     }
 };
 
 export const toggleLike = async (req, res) => {
     try {
-
         const { id } = req.params;
 
         const post = await Post.findById(id);
@@ -165,7 +185,7 @@ export const toggleLike = async (req, res) => {
         if (!post) {
             return res.status(404).json({
                 success: false,
-                message: "Post not found."
+                message: "Post not found.",
             });
         }
 
@@ -193,13 +213,12 @@ export const toggleLike = async (req, res) => {
             likesCount: post.likes.length,
             isLiked: !alreadyLiked,
         });
-
     } catch (error) {
         console.error("Toggle Like Error:", error);
 
         return res.status(500).json({
             success: false,
-            message: "Internal Server Error."
+            message: "Internal Server Error.",
         });
     }
 };

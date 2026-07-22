@@ -25,9 +25,13 @@ const PostActions = ({
                 >
                     <Heart
                         size={20}
-                        fill={post.isLiked ? "currentColor" : "none"}
+                        className={
+                            post.isLiked
+                                ? "fill-red-500 text-red-500"
+                                : ""
+                        }
                     />
-                    <span>{post.likes.length}</span>
+                    <span>{post.likesCount ?? post.likes?.length ?? 0}</span>
                 </button>
 
                 <button
@@ -35,7 +39,7 @@ const PostActions = ({
                     className="flex items-center gap-2 text-gray-600 transition hover:text-blue-600"
                 >
                     <MessageCircle size={20} />
-                    <span>{post.comments?.length || 0}</span>
+                    <span>{post.commentsCount ?? 0}</span>
                 </button>
             </div>
 

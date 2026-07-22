@@ -39,7 +39,7 @@ const DesktopSidebar = () => {
         <aside className="sticky top-0 flex h-screen w-72 flex-col border-r border-gray-200 bg-white px-6 py-8">
 
             <h1 className="mb-10 text-3xl font-bold text-blue-600">
-                ISNS
+                NEEPCO Social
             </h1>
 
             <nav className="flex flex-1 flex-col gap-2">

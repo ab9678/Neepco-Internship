@@ -1,7 +1,7 @@
 import DesktopSidebar from "../components/layout/DesktopSidebar";
 import MobileHeader from "../components/layout/MobileHeader";
 import BottomNavigation from "../components/layout/BottomNavigation";
-import FloatingActionButton from "../components/layout/FloatingActionButton";
+// import FloatingActionButton from "../components/layout/FloatingActionButton";
 
 const MainLayout = ({ children }) => {
     return (
@@ -31,8 +31,6 @@ const MainLayout = ({ children }) => {
                 <BottomNavigation />
             </div>
 
-            {/* Floating Action Button */}
-            <FloatingActionButton />
 
         </div>
     );

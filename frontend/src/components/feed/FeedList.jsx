@@ -1,6 +1,6 @@
 import PostCard from "./PostCard";
 
-const FeedList = ({ posts, loading }) => {
+const FeedList = ({ posts, loading, onPostsChanged }) => {
     if (loading) {
         return (
             <p className="text-center text-gray-500">
@@ -23,6 +23,7 @@ const FeedList = ({ posts, loading }) => {
                 <PostCard
                     key={post._id}
                     post={post}
+                    onPostsChanged={onPostsChanged}
                 />
             ))}
         </div>

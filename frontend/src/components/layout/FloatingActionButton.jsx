@@ -1,8 +1,9 @@
 import { FaPlus } from "react-icons/fa";
 
-const FloatingActionButton = () => {
+const FloatingActionButton = ({ onClick }) => {
     return (
         <button
+            onClick={onClick}
             className="
                 fixed
                 bottom-24

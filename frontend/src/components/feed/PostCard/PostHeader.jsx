@@ -11,16 +11,16 @@ const PostHeader = ({ post }) => {
                         employee?.profilePicture ||
                         "https://ui-avatars.com/api/?name=" +
                             encodeURIComponent(
-                                `${employee?.firstName || ""} ${employee?.lastName || ""}`
+                                employee?.fullName || "User"
                             )
                     }
-                    alt={`${employee?.firstName} ${employee?.lastName}`}
-                    className="h-11 w-11 rounded-full object-cover border"
+                    alt={employee?.fullName || "User"}
+                    className="h-11 w-11 rounded-full border object-cover"
                 />
 
                 <div>
                     <h3 className="font-semibold text-gray-900">
-                        {employee?.firstName} {employee?.lastName}
+                        {employee?.fullName}
                     </h3>
 
                     <p className="text-sm text-gray-500">

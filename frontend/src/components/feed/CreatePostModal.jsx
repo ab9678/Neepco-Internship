@@ -3,8 +3,12 @@ import { Plus, X } from "lucide-react";
 
 import postService from "../../services/post.service";
 
-const CreatePostModal = ({ onPostCreated }) => {
-    const [open, setOpen] = useState(false);
+const CreatePostModal = ({
+    isOpen,
+    onOpen,
+    onClose,
+    onPostCreated,
+}) => {
     const [content, setContent] = useState("");
     const [loading, setLoading] = useState(false);
 
@@ -22,7 +26,7 @@ const CreatePostModal = ({ onPostCreated }) => {
 
             if (data.success) {
                 setContent("");
-                setOpen(false);
+                onClose();
 
                 if (onPostCreated) {
                     onPostCreated();
@@ -38,14 +42,14 @@ const CreatePostModal = ({ onPostCreated }) => {
     return (
         <>
             <button
-                onClick={() => setOpen(true)}
+                onClick={onOpen}
                 className="flex w-full items-center justify-center gap-2 rounded-xl border border-gray-300 bg-white p-4 transition hover:bg-gray-50"
             >
                 <Plus size={20} />
                 <span>Create Post</span>
             </button>
 
-            {open && (
+            {isOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
                     <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
                         <div className="mb-5 flex items-center justify-between">
@@ -54,7 +58,7 @@ const CreatePostModal = ({ onPostCreated }) => {
                             </h2>
 
                             <button
-                                onClick={() => setOpen(false)}
+                                onClick={onClose}
                                 className="rounded-full p-2 hover:bg-gray-100"
                             >
                                 <X size={20} />

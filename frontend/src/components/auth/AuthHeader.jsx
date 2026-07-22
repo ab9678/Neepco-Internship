@@ -18,7 +18,7 @@ const AuthHeader = ({ title, subtitle }) => {
                         text-white
                     "
                 >
-                    ISNS
+                    NEEPCO Social
                 </div>
 
             </div>
