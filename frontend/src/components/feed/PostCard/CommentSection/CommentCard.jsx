@@ -11,17 +11,15 @@ const CommentCard = ({
 
     const employee = comment.author?.employee;
 
-
-    console.log("typeof:", typeof comment);
-    console.log("isArray:", Array.isArray(comment));
-    console.log("value:", comment);
-
     const [isEditing, setIsEditing] = useState(false);
     const [content, setContent] = useState(comment.content);
     const [loading, setLoading] = useState(false);
 
     const isOwner =
         user?._id === comment.author?._id;
+
+    const isAdmin =
+        user?.role === "admin";
 
     const handleSave = async () => {
         if (!content.trim()) return;
@@ -74,23 +72,27 @@ const CommentCard = ({
                         </span>
                     </div>
 
-                    {isOwner && !isEditing && (
+                    {!isEditing && (
                         <div className="flex gap-3 text-xs">
-                            <button
-                                onClick={() =>
-                                    setIsEditing(true)
-                                }
-                                className="text-blue-600 hover:text-blue-700"
-                            >
-                                Edit
-                            </button>
+                            {isOwner && (
+                                <button
+                                    onClick={() =>
+                                        setIsEditing(true)
+                                    }
+                                    className="text-blue-600 hover:text-blue-700"
+                                >
+                                    Edit
+                                </button>
+                            )}
 
-                            <button
-                                onClick={handleDelete}
-                                className="text-red-600 hover:text-red-700"
-                            >
-                                Delete
-                            </button>
+                            {(isOwner || isAdmin) && (
+                                <button
+                                    onClick={handleDelete}
+                                    className="text-red-600 hover:text-red-700"
+                                >
+                                    Delete
+                                </button>
+                            )}
                         </div>
                     )}
                 </div>
@@ -100,9 +102,7 @@ const CommentCard = ({
                         <textarea
                             value={content}
                             onChange={(e) =>
-                                setContent(
-                                    e.target.value
-                                )
+                                setContent(e.target.value)
                             }
                             rows={3}
                             className="mt-3 w-full rounded-lg border border-gray-300 p-2 text-sm focus:border-blue-500 focus:outline-none"
@@ -119,9 +119,7 @@ const CommentCard = ({
 
                             <button
                                 onClick={() => {
-                                    setContent(
-                                        comment.content
-                                    );
+                                    setContent(comment.content);
                                     setIsEditing(false);
                                 }}
                                 className="rounded bg-gray-300 px-3 py-1 text-sm hover:bg-gray-400"
