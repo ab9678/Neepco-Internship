@@ -1,25 +1,46 @@
 import Post from "../models/Post.js";
+import fs from "fs";
+import path from "path";
 
 export const createPost = async (req, res) => {
     try {
-        const { content } = req.body;
+        const { content = "" } = req.body;
 
-        if (!content || !content.trim()) {
+        const trimmedContent = content.trim();
+
+        const images = req.files
+            ? req.files.map(
+                  (file) => `/uploads/posts/${file.filename}`
+              )
+            : [];
+
+        // Require either text or at least one image
+        if (!trimmedContent && images.length === 0) {
             return res.status(400).json({
                 success: false,
-                message: "Post content is required.",
+                message: "Post must contain text or at least one image.",
             });
         }
 
         const post = await Post.create({
             author: req.user._id,
-            content: content.trim(),
+            content: trimmedContent,
+            images,
+        });
+
+        const populatedPost = await Post.findById(post._id).populate({
+            path: "author",
+            populate: {
+                path: "employee",
+                select:
+                    "firstName lastName fullName employeeId department designation",
+            },
         });
 
         return res.status(201).json({
             success: true,
             message: "Post created successfully.",
-            post,
+            post: populatedPost,
         });
     } catch (error) {
         console.error("Create Post Error:", error);
@@ -75,14 +96,9 @@ export const getAllPosts = async (req, res) => {
 export const updatePost = async (req, res) => {
     try {
         const { id } = req.params;
-        const { content } = req.body;
+        const { content = "" } = req.body;
 
-        if (!content || !content.trim()) {
-            return res.status(400).json({
-                success: false,
-                message: "Post content is required.",
-            });
-        }
+        const trimmedContent = content.trim();
 
         const post = await Post.findById(id);
 
@@ -100,7 +116,83 @@ export const updatePost = async (req, res) => {
             });
         }
 
-        post.content = content.trim();
+        const newImages = req.files
+            ? req.files.map(
+                  (file) => `/uploads/posts/${file.filename}`
+              )
+            : [];
+
+        let images;
+
+        // `keepImages` is an optional JSON-stringified array of existing
+        // image paths the client wants to retain (sent by the current
+        // frontend so users can delete individual images and/or add new
+        // ones in the same edit). When it's not sent at all, we fall back
+        // to the original behaviour for backward compatibility: replace
+        // everything if new files were uploaded, otherwise keep the
+        // existing images untouched.
+        if (typeof req.body.keepImages === "string") {
+            let keepImages = [];
+
+            try {
+                const parsed = JSON.parse(req.body.keepImages);
+                if (Array.isArray(parsed)) {
+                    keepImages = parsed.filter((item) =>
+                        post.images.includes(item)
+                    );
+                }
+            } catch {
+                keepImages = [];
+            }
+
+            images = [...keepImages, ...newImages].slice(0, 5);
+
+            // Delete any image that was on the post but isn't being kept.
+            const imagesToDelete = post.images.filter(
+                (image) => !images.includes(image)
+            );
+
+            for (const image of imagesToDelete) {
+                const imagePath = path.join(
+                    process.cwd(),
+                    image.replace(/^\/+/, "")
+                );
+
+                if (fs.existsSync(imagePath)) {
+                    fs.unlinkSync(imagePath);
+                }
+            }
+        } else {
+            // Keep old images if no new ones were uploaded
+            images = post.images;
+
+            if (newImages.length > 0) {
+                // Delete old image files
+                for (const image of post.images) {
+                    const imagePath = path.join(
+                        process.cwd(),
+                        image.replace(/^\/+/, "")
+                    );
+
+                    if (fs.existsSync(imagePath)) {
+                        fs.unlinkSync(imagePath);
+                    }
+                }
+
+                images = newImages;
+            }
+        }
+
+        // Prevent empty posts
+        if (!trimmedContent && images.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: "Post must contain text or at least one image.",
+            });
+        }
+
+        post.content = trimmedContent;
+        post.images = images;
         post.isEdited = true;
 
         await post.save();
@@ -109,7 +201,8 @@ export const updatePost = async (req, res) => {
             path: "author",
             populate: {
                 path: "employee",
-                select: "firstName lastName fullName employeeId department designation profilePicture",
+                select:
+                    "firstName lastName fullName employeeId department designation",
             },
         });
 
@@ -136,7 +229,6 @@ export const updatePost = async (req, res) => {
         });
     }
 };
-
 export const deletePost = async (req, res) => {
     try {
         const { id } = req.params;
@@ -158,6 +250,18 @@ export const deletePost = async (req, res) => {
                 success: false,
                 message: "You are not authorized to delete this post.",
             });
+        }
+
+        // Delete all uploaded images from disk
+        for (const image of post.images) {
+            const imagePath = path.join(
+                process.cwd(),
+                image.replace(/^\/+/, "")
+            );
+
+            if (fs.existsSync(imagePath)) {
+                fs.unlinkSync(imagePath);
+            }
         }
 
         await post.deleteOne();

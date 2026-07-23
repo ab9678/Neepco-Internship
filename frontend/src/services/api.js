@@ -28,6 +28,14 @@ api.interceptors.request.use((config) => {
         config.headers.Authorization = `Bearer ${token}`;
     }
 
+    // For FormData (file uploads), let the browser set its own
+    // "multipart/form-data; boundary=..." header. The instance-level
+    // "Content-Type: application/json" default above would otherwise
+    // override it and the server would receive text fields but no files.
+    if (config.data instanceof FormData) {
+        delete config.headers["Content-Type"];
+    }
+
     return config;
 });
 

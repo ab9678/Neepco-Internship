@@ -1,3 +1,5 @@
+import PostImageGrid from "./PostImageGrid";
+
 const PostContent = ({ post }) => {
     return (
         <div className="mt-4 space-y-3">
@@ -7,15 +9,7 @@ const PostContent = ({ post }) => {
                 </p>
             )}
 
-            {post.image && (
-                <div className="overflow-hidden rounded-xl border border-gray-200">
-                    <img
-                        src={post.image}
-                        alt="Post"
-                        className="w-full object-cover"
-                    />
-                </div>
-            )}
+            <PostImageGrid images={post.images} />
         </div>
     );
 };
